@@ -1,0 +1,28 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Secrets and local settings (never commit these)
+.env
+*.json.key
+service-account*.json
+credentials*.json
+
+# ADK / chat history
+.adk/
+chat_history.db
+*.db
+
+# Local data and test files
+*.pdf
+*.html
+*.htm
+test_tools.py
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

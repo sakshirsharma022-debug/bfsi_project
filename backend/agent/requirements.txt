@@ -1,0 +1,7 @@
+pymupdf
+beautifulsoup4
+lxml
+google-cloud-storage
+google-cloud-bigquery
+google-cloud-aiplatform
+google-adk
