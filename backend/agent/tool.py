@@ -84,6 +84,16 @@ def search_tables(question: str, ticker: str = "", fiscal_period: str = "") -> d
     for r in rows:
         r["values"] = [{"column": c["column_label"], "shown_as": c["display"], "value": c["value"]}
                        for c in cells if c["row_id"] == r["row_id"]]
+        # Tables that show items "as a percentage of revenue" have a Revenue row of exactly 100.
+    table_ids = list({r["table_id"] for r in rows})
+    pct = _run(f"SELECT DISTINCT table_id FROM {_t('table_cells')} WHERE table_id IN UNNEST(@t) "
+               "AND LOWER(row_label) IN ('revenue','revenues','net sales','total revenue','total revenues') "
+               "AND value = 100", [bigquery.ArrayQueryParameter("t", "STRING", table_ids)])
+    percent_tables = {p["table_id"] for p in pct}
+    for r in rows:
+        if r["table_id"] in percent_tables:
+            r["scale"] = "% of revenue"
+            r["note"] = "These values are percentages of revenue (not dollars, and not rates such as the effective tax rate)."
     return {"results": rows}
 
 
@@ -150,3 +160,16 @@ def search_tables_many(question: str, tickers: str, fiscal_period: str = "") -> 
         if ticker:
             results[ticker] = search_tables(question, ticker, fiscal_period)
     return results
+
+def search_all(question: str, ticker: str = "", fiscal_period: str = "") -> dict:
+    """Search BOTH the financial tables and the written text of the filings in one call. Use this by default.
+    Many facts (a commercial paper program, a credit facility, a buyback authorization, a risk) are written
+    in a sentence in the text, not in a table.
+
+    Args:
+        question: what to look for.
+        ticker: optional company ticker such as "nvidia".
+        fiscal_period: optional period such as "FY2026 Q1".
+    """
+    return {"tables": search_tables(question, ticker, fiscal_period),
+            "passages": search_text(question, ticker, fiscal_period)}

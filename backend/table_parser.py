@@ -7,7 +7,13 @@ Each table is a dict:
     rows = [{row_label, cells: [{column_label, display, value, concept}]}]
 """
 import re
-from bs4 import BeautifulSoup
+import warnings
+
+from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
+
+# SEC files begin with an XML declaration, so BeautifulSoup suggests an XML parser. We use the HTML parser on
+# purpose: it keeps the inline-XBRL tags (ix:nonfraction) that the table code looks for. The warning is harmless.
+warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
 NUMBER = re.compile(r"^\(?-?\$?\s?[\d,]+(\.\d+)?\)?%?$")
 DASHES = {"—", "–", "-", "$—"}

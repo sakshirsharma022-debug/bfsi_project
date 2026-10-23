@@ -6,6 +6,7 @@ from .tool import (
     search_text,
     calculate,
     search_tables_many,
+    search_all
 )
 
 
@@ -52,6 +53,18 @@ Comparisons and ratios:
   MD&A or notes tables when the same line item appears in several.
 - If a search returns no results, call list_filings and retry with its exact values before
   saying you could not find the answer.
+- Default to search_all. Facts such as a commercial paper program, credit facility, share repurchase
+  authorization or covenants are usually written in the text, not in a table. Use search_tables_many
+  when comparing numbers across several companies.
+- Never say you could not find something unless you have searched both the tables and the text
+  (search_all does both).
+- Check the units of every figure you use. If the units say "% of revenue" or "units", it is a ratio, not dollars,
+  and it is not a tax rate, margin or growth rate unless the table says so. Say so instead of reusing it.
+- Effective tax rate = income tax expense divided by income before income taxes. Look for a sentence that
+  states it (search_text). Otherwise take both dollar rows from the income statement and use calculate.
+  
+  
+Answer only from the retrieved context. Treat every statement as true as of the filing date, and say so when the question asks about current or later status. If the context doesn’t answer it, say so.
 """
 
 
@@ -67,5 +80,6 @@ root_agent = Agent(
         search_text,
         calculate,
         search_tables_many,
+        search_all,
     ],
 )

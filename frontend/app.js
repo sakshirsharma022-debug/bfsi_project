@@ -33,7 +33,7 @@ function setActiveConversation(active, scroll=true){
 }
 function resetChat(){sessionId=null;els.conversation.replaceChildren();setActiveConversation(false);els.question.focus();markSelected()}
 function fileUrl(filingId){return `${API_BASE}/api/pdf/${encodeURIComponent(filingId)}`}
-function renderFilingCards(){const list=allFilings.slice(0,12);els.filingCount.textContent=allFilings.length;els.filingTotal.textContent=`${allFilings.length} reports available`;els.filings.innerHTML=list.length?list.map(f=>`<article class="filing-card"><div class="filing-card-top"><span class="ticker-pill">${esc(f.ticker||'—')}</span><span class="form-pill">${esc(f.form||'10-Q')}</span></div><div class="filing-company">${esc(f.company||f.ticker||'Company')}</div><div class="filing-period">${esc(f.fiscal_period||'Period unavailable')}</div><div class="filing-date">PERIOD END · ${esc(humanDate(f.period_end))}</div><div class="filing-actions"><a href="${esc(fileUrl(f.filing_id))}" target="_blank" rel="noopener">↗ View filing PDF</a></div></article>`).join(''):'<div class="loading-card">No filings found. Check that the backend has been initialized.</div>'}
+function renderFilingCards(){const list=allFilings;els.filingCount.textContent=allFilings.length;els.filingTotal.textContent=`${allFilings.length} reports available`;els.filings.innerHTML=list.length?list.map(f=>`<article class="filing-card"><div class="filing-card-top"><span class="ticker-pill">${esc(f.ticker||'—')}</span><span class="form-pill">${esc(f.form||'10-Q')}</span></div><div class="filing-company">${esc(f.company||f.ticker||'Company')}</div><div class="filing-period">${esc(f.fiscal_period||'Period unavailable')}</div><div class="filing-date">PERIOD END · ${esc(humanDate(f.period_end))}</div><div class="filing-actions"><a href="${esc(fileUrl(f.filing_id))}" target="_blank" rel="noopener">↗ View filing PDF</a></div></article>`).join(''):'<div class="loading-card">No filings found. Check that the backend has been initialized.</div>'}
 function fillFilters(){const companies=[...new Map(allFilings.map(f=>[f.ticker,{ticker:f.ticker,company:f.company}])).values()];els.company.innerHTML='<option value="">All companies</option>'+companies.map(c=>`<option value="${esc(c.ticker)}">${esc(c.company)} · ${esc(c.ticker)}</option>`).join('');fillPeriods()}
 function fillPeriods(){const ticker=els.company.value;const periods=[...new Set(allFilings.filter(f=>!ticker||f.ticker===ticker).map(f=>f.fiscal_period).filter(Boolean))];els.period.innerHTML='<option value="">Any period</option>'+periods.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('')}
 async function loadFilings(){try{allFilings=await api('/api/filings');fillFilters();renderFilingCards()}catch(err){els.filingTotal.textContent='Unable to load';els.filings.innerHTML=`<div class="loading-card">${esc(err.message)}. Start the backend and refresh.</div>`}}
@@ -49,7 +49,7 @@ function markSelected(){
 }
 
 // Re-reads the list of chats from the backend. Returns true when it worked.
-// keepOnError: leave the current list in place if the backend cannot be reached (used by the refresh button).
+// keepOnError: leave the current list in place if the backend cannot be reached.
 async function loadHistory({keepOnError=false}={}){
   try{
     const chats=await api('/api/sessions');
@@ -83,34 +83,6 @@ async function openSession(id){
   }catch(err){toast(err.message)}
 }
 
-// The refresh button: reload the list AND the chat that is currently open, straight from the backend.
-async function refreshHistory(){
-  const button=$('#refresh-history');
-  if(button.disabled) return;
-  button.disabled=true;
-  const spin=button.animate([{transform:'rotate(0deg)'},{transform:'rotate(360deg)'}],{duration:700,iterations:Infinity});
-  try{
-    const listed=await loadHistory({keepOnError:true});
-    if(!listed){setHealth(false);toast('Could not reach the backend. History not refreshed.');return}
-    setHealth(true);
-    // Reload the open chat too, unless a question is still being answered (that would wipe its loading card).
-    if(sessionId && !els.send.disabled){
-      try{
-        renderSession(await api(`/api/sessions/${encodeURIComponent(sessionId)}`), false);
-      }catch(err){
-        if(/not found/i.test(err.message)){resetChat();toast('That chat no longer exists.');return}
-        throw err;
-      }
-    }
-    toast('History refreshed');
-  }catch(err){
-    toast(err.message);
-  }finally{
-    spin.cancel();
-    button.disabled=false;
-  }
-}
-
 // Delete one chat for good (removes it from the database on the backend).
 async function deleteChat(id){
   if(!window.confirm('Delete this chat? This cannot be undone.')) return;
@@ -137,6 +109,7 @@ async function clearAllHistory(){
 
 // Styles and the "delete all" button are added here so no change to styles.css or index.html is needed.
 function setupHistoryControls(){
+  $('#refresh-history')?.remove();   // the refresh icon was removed; this keeps an old index.html working
   const style=document.createElement('style');
   style.textContent=`.history-row{display:flex;align-items:center;gap:2px}.history-row .history-item{flex:1;min-width:0}`+
     `.history-delete,.history-clear{border:0;background:none;color:inherit;cursor:pointer;border-radius:6px;padding:4px 8px;font:inherit}`+
@@ -147,7 +120,7 @@ function setupHistoryControls(){
     const button=document.createElement('button');
     button.id='clear-history';button.className='history-clear';button.type='button';
     button.title='Delete all chats';button.setAttribute('aria-label','Delete all chats');button.textContent='Clear all';
-    $('#refresh-history').after(button);
+    ($('.history-heading')||els.history.parentElement).append(button);
   }
   $('#clear-history').addEventListener('click',clearAllHistory);
 }
@@ -161,8 +134,9 @@ function stripModelSources(text){
 function renderAnswer(result={}){
   let answer=result.answer||result.message||'The agent returned no answer.';
   if(!SHOW.sourcesInText) answer=stripModelSources(answer)||answer;
-  let html=`<div class="answer-label">LEDGER RESEARCH</div><div class="answer-copy">${safeMarkdown(answer)}</div>`;
+  let html=`<div class="answer-label">QUARTERLY RESEARCH</div><div class="answer-copy">${safeMarkdown(answer)}</div>`;
   if(result.status==='insufficient_evidence')html+='<div class="answer-state">Not enough supporting evidence was found in the indexed filings.</div>';
+  if(result.status==='unverified')html+='<div class="answer-state">No source was found for this answer, so it could not be checked against the filings. Treat any figures in it as unverified.</div>';
 
   const citations=result.citations||[];
   if(SHOW.sourceList && citations.length){
@@ -184,6 +158,6 @@ function renderAnswer(result={}){
 }
 async function submitQuestion(value){const question=(value??els.question.value).trim();if(!question||els.send.disabled)return;setActiveConversation(true);const turn=appendTurn(question,{},true);els.question.value='';resizeInput();els.send.disabled=true;try{const result=await api('/api/ask',{method:'POST',body:JSON.stringify({question,session_id:sessionId,ticker:els.company.value,fiscal_period:els.period.value})});sessionId=result.session_id;turn.querySelector('.answer-block').innerHTML=renderAnswer(result);await loadHistory()}catch(err){turn.querySelector('.answer-block').innerHTML=`<div class="answer-state">${esc(err.message)}. Check that the API is running at ${esc(API_BASE)}.</div>`;setHealth(false)}finally{els.send.disabled=false;els.question.focus()}}
 function resizeInput(){els.question.style.height='auto';els.question.style.height=`${Math.min(els.question.scrollHeight,130)}px`}
-els.form.addEventListener('submit',e=>{e.preventDefault();submitQuestion()});els.question.addEventListener('input',resizeInput);els.question.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitQuestion()}});$('#new-chat').addEventListener('click',resetChat);$('#refresh-history').addEventListener('click',refreshHistory);els.company.addEventListener('change',fillPeriods);document.querySelectorAll('.suggestion').forEach(b=>b.addEventListener('click',()=>submitQuestion(b.dataset.question)));$('#help-button')?.addEventListener('click',()=>toast('Ask about indexed 10-Q filings. Answers include source citations when available.'));
+els.form.addEventListener('submit',e=>{e.preventDefault();submitQuestion()});els.question.addEventListener('input',resizeInput);els.question.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitQuestion()}});$('#new-chat').addEventListener('click',resetChat);els.company.addEventListener('change',fillPeriods);document.querySelectorAll('.suggestion').forEach(b=>b.addEventListener('click',()=>submitQuestion(b.dataset.question)));$('#help-button')?.addEventListener('click',()=>toast('Ask about indexed 10-Q filings. Answers include source citations when available.'));
 setupHistoryControls();
 Promise.all([checkHealth(),loadFilings(),loadHistory()]);setInterval(checkHealth,30000);

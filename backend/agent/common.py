@@ -4,7 +4,7 @@ import vertexai
 from vertexai.language_models import TextEmbeddingModel, TextEmbeddingInput
 import time 
 
-PROJECT = "rare-bastion-503107-q3"
+PROJECT = "quiet-terminal-422106"
 LOCATION = "us-central1"
 BUCKET = "bfsi_project_data"
 RAW_PREFIX = "raw"          # raw/{TICKER}/{name}.pdf   and   raw/{TICKER}/html/{name}.htm

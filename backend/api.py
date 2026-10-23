@@ -19,6 +19,7 @@ Endpoints
     GET    /api/pdf/{filing_id}      the PDF, for "View PDF page" (open with #page=N)
 """
 import os
+import re
 import uuid
 from pathlib import Path
 
@@ -51,10 +52,21 @@ APP_NAME = "tenq"
 USER_ID = "analyst"                      # later: the logged-in user, so each analyst has their own chats
 # Where chat history lives. Locally: a SQLite file. In production: set CHAT_DB_URL to a Cloud SQL URL, e.g.
 #   postgresql+asyncpg://USER:PASSWORD@/DBNAME?host=/cloudsql/PROJECT:REGION:INSTANCE
-CHAT_DB_URL = os.getenv("CHAT_DB_URL", "sqlite+aiosqlite:///chat_history.db")
+DEFAULT_DB = Path(__file__).parent / "chat_history.db"          # always next to api.py, whatever folder you start from
+CHAT_DB_URL = os.getenv("CHAT_DB_URL", f"sqlite+aiosqlite:///{DEFAULT_DB.as_posix()}")
 FRONTEND_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
 FILTER_MARKER = "\n\n[UI filters:"       # added to the question so the agent knows the dropdown choices
 
+
+
+def history_location():
+    """Where chats are stored, for the startup message and /api/health (never shows a password)."""
+    if CHAT_DB_URL.startswith("sqlite"):
+        return CHAT_DB_URL.split(":///", 1)[1]
+    return "external database (set by CHAT_DB_URL)"
+
+
+print(f"Chat history is stored in: {history_location()}")
 service = DatabaseSessionService(CHAT_DB_URL)
 runner = Runner(app=App(name=APP_NAME, root_agent=root_agent), session_service=service)
 
@@ -84,11 +96,15 @@ def text_of(event):
 def build_answer(answer, events):
     """Answer text + structured evidence read from the tool results of this turn."""
     evidence = collect_evidence(events, answer)
-    # "not found" only when the agent searched and nothing came back
-    status = "answered" if (evidence["grounded"] or not evidence["searched"]) else "insufficient_evidence"
+    # "not found": the search came back empty, or the answer itself says it could not find it
+    not_found = evidence["refused"] or (evidence["searched"] and not evidence["grounded"])
+    # "unverified": the answer contains figures but the agent never looked anything up, so nothing backs it
+    unsourced = (not evidence["searched"]) and "list_filings" not in evidence["tools_used"] \
+        and re.search(r"\d", answer) is not None
+    status = "insufficient_evidence" if not_found else "unverified" if unsourced else "answered"
     result = {"status": status, "answer": answer,
               "citations": evidence["citations"], "figures": evidence["figures"],
-              "calculations": evidence["calculations"]}
+              "calculations": evidence["calculations"], "tools_used": evidence["tools_used"]}
     if status != "answered":
         result["message"] = answer
     return result
@@ -126,7 +142,7 @@ async def ensure_session(session_id):
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "history_store": history_location()}
 
 
 @app.get("/api/companies")
@@ -183,7 +199,9 @@ async def ask(req: AskRequest):
             raise HTTPException(429, "The model is rate limited. Wait a minute and try again.")
         raise HTTPException(500, f"The agent failed: {str(exc)[:300]}")
 
-    return {"session_id": session_id, **build_answer(answer, events)}
+    result = build_answer(answer, events)
+    print(f"ask: status={result['status']} tools={result['tools_used']} sources={len(result['citations'])}", flush=True)
+    return {"session_id": session_id, **result}
 
 
 # ---------------------------------------------------------
