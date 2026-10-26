@@ -4,7 +4,7 @@ from common import list_files, load_filings, embed, save_rows, make_citation
 from table_parser import extract_tables, to_markdown
 
 # Keep embedding requests small to reduce token-limit errors.
-EMBED_BATCH_SIZE = 8
+EMBED_BATCH_SIZE = 150
 
 
 def embed_in_batches(texts, batch_size=EMBED_BATCH_SIZE):

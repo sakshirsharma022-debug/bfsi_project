@@ -1,64 +1,13 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#f6f7f5" />
-  <title>Quarterly — 10-Q Research</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css" />
-</head>
-<body>
-  <div class="app-shell">
-    <aside class="sidebar">
-      <a class="brand" href="#" aria-label="Quarterly home"><span class="brand-mark">Q</span><span>Quarterly<span class="brand-dot">.</span></span></a>
-      <button class="new-chat" id="new-chat"><span class="plus">＋</span> New research</button>
-      <div class="side-label">WORKSPACE</div>
-      <a class="side-link active" href="#"><span class="side-icon">◈</span> Research assistant</a>
-      <a class="side-link" href="#filings"><span class="side-icon">▤</span> Filing library <span class="side-count" id="filing-count">—</span></a>
-      <div class="history-heading"><span class="side-label">RECENT RESEARCH</span><button id="refresh-history" class="icon-button" title="Refresh history">↻</button></div>
-      <div class="history-list" id="history-list"><div class="side-muted">Your conversations will appear here.</div></div>
-      <div class="sidebar-bottom"><div class="user-avatar">A</div><div><div class="user-name">Financial analyst</div><div class="user-role">Research workspace</div></div><span class="more">•••</span></div>
-    </aside>
-
-    <main class="main-area">
-      <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <strong>Research assistant</strong></div><div class="topbar-right"><div class="api-status"><i id="health-dot"></i><span id="health-text">Connecting to backend</span></div><button class="help-button" title="About this workspace">?</button></div></header>
-      <div class="content-wrap">
-        <section class="welcome" id="welcome">
-          <div class="eyebrow"><span class="eyebrow-line"></span> FILINGS, MADE CLEAR</div>
-          <h1>Good research starts<br />with <em>good questions.</em></h1>
-          <p class="intro">Ask about company performance, compare periods, or trace a number back to its filing. Every answer is grounded in the reports.</p>
-          <div class="filter-bar">
-            <label class="filter-field"><span>COMPANY</span><select id="company-filter"><option value="">All companies</option></select></label>
-            <span class="filter-divider"></span>
-            <label class="filter-field period-field"><span>FISCAL PERIOD</span><select id="period-filter"><option value="">Any period</option></select></label>
-            <span class="filter-hint">Filters apply to your next question</span>
-          </div>
-          <div class="suggestion-label">START WITH A QUESTION</div>
-          <div class="suggestions">
-            <button class="suggestion" data-question="How did revenue change year over year in the latest available quarter?"><span class="suggestion-icon green">↗</span><span><b>Revenue, over time</b><small>How did revenue change year over year?</small></span><span class="suggestion-arrow">↗</span></button>
-            <button class="suggestion" data-question="What drove the change in operating expenses this quarter?"><span class="suggestion-icon blue">⌁</span><span><b>Understand the drivers</b><small>What changed in operating expenses?</small></span><span class="suggestion-arrow">↗</span></button>
-            <button class="suggestion" data-question="Compare the latest quarterly revenue for Meta, Alphabet, Amazon, and Nvidia."><span class="suggestion-icon amber">⇄</span><span><b>Compare companies</b><small>Put the latest results side by side</small></span><span class="suggestion-arrow">↗</span></button>
-          </div>
-        </section>
-
-        <section class="conversation hidden" id="conversation" aria-live="polite"></section>
-        <div class="composer-area" id="composer-area">
-          <form class="composer" id="ask-form"><textarea id="question" rows="1" placeholder="Ask about a filing, metric, or trend…" aria-label="Your research question"></textarea><div class="composer-bottom"><div class="composer-note"><span class="sparkle">✳</span> Answers grounded in SEC filings</div><button class="send-button" id="send-button" type="submit" aria-label="Send question">↑</button></div></form>
-          <div class="disclaimer">Review cited filings for context. AI-generated research can contain errors.</div>
-        </div>
-
-        <section class="filings-section" id="filings">
-          <div class="section-head"><div><div class="eyebrow"><span class="eyebrow-line"></span> SOURCE MATERIAL</div><h2>Filing library</h2></div><span class="filing-total" id="filing-total">Loading filings…</span></div>
-          <div class="filing-grid" id="filing-grid"><div class="loading-card">Loading available filings…</div></div>
-        </section>
-        <footer class="footer"><span>Quarterly<span class="brand-dot">·</span> FINANCIAL RESEARCH</span><span>Built for answers you can trace.</span></footer>
-      </div>
-    </main>
-  </div>
-  <div class="toast" id="toast" role="status"></div>
-  <script src="./app.js" defer></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>frontend</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

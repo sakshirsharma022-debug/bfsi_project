@@ -1,0 +1,15 @@
+google-adk[db]>=2.0
+google-genai
+google-cloud-aiplatform
+google-cloud-bigquery
+google-cloud-storage
+google-cloud-firestore
+firebase-admin
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+reportlab
+pymupdf
+beautifulsoup4
+lxml

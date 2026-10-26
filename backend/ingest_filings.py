@@ -31,7 +31,12 @@ from common import BUCKET, list_files, save_rows
 # Configuration
 # ---------------------------------------------------------
 
-SEC_USER_AGENT = os.getenv("SEC_USER_AGENT", "").strip()
+
+# Safe production fallback if environment variable is not provided
+SEC_USER_AGENT = os.getenv("SEC_USER_AGENT", "FinancialResearchApp admin@financialresearch.internal")
+
+if not os.getenv("SEC_USER_AGENT"):
+    print("Warning: SEC_USER_AGENT environment variable not set. Using default fallback.")
 REQUEST_DELAY_SECONDS = 0.15
 
 SEC_TICKER_URL = "https://www.sec.gov/files/company_tickers.json"

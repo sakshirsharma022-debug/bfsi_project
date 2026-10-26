@@ -23,11 +23,11 @@ from common import (
 )
 
 
-CHUNK_WORDS = 350
-OVERLAP_WORDS = 60
+CHUNK_WORDS = 400
+OVERLAP_WORDS = 50
 
 # Process only 8 chunks per embedding request.
-EMBED_BATCH_SIZE = 8
+EMBED_BATCH_SIZE = 10
 
 HEADING = re.compile(
     r"^\s*(PART\s+[IV]+\b|Item\s+\d+[A]?\.)",
@@ -118,7 +118,7 @@ def make_chunks(words):
     return chunks
 
 
-def embed_in_batches(texts, batch_size=EMBED_BATCH_SIZE):
+def embed_text_in_batches(texts, batch_size=EMBED_BATCH_SIZE):
     """
     Generate embeddings in smaller requests.
 
@@ -200,7 +200,7 @@ def main():
             ]
 
             # 4. Generate embeddings in small batches.
-            vectors = embed_in_batches(texts_to_embed)
+            vectors = embed_text_in_batches(texts_to_embed)
 
             # 5. Prepare BigQuery rows.
             rows = []
